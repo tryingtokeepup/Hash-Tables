@@ -16,6 +16,7 @@ typedef struct Pair
  ****/
 typedef struct BasicHashTable
 {
+  // capacity is the number of pairs we can have, or the number of key:value pairs we can... store?
   int capacity;
   Pair **storage;
 } BasicHashTable;
@@ -90,6 +91,14 @@ BasicHashTable *create_hash_table(int capacity)
  ****/
 void hash_table_insert(BasicHashTable *ht, char *key, char *value)
 {
+  // so i first need to hash the key
+  // i guess I need some max, so is that the ... capacity?
+  unsigned int hashed_index = hash(*key, ht->capacity);
+  // okay so i have the hashed index, i need to put my key and value into that index
+  // struct is Pair, i allocate a pointer to point to a chunk of data that is the size of pair
+  //Pair *pair = malloc(sizeof(Pair));
+  // nvm, we have a function called createpair() lol
+  Pair *pair = createpair(key, value);
 }
 
 /****
