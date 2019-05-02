@@ -82,19 +82,6 @@ BasicHashTable *create_hash_table(int capacity)
 
   return ht;
 }
-// BasicHashTable *create_hash_table(int capacity)
-// {
-//   if (capacity < 1)
-//   {
-//     return NULL;
-//   }
-
-//   BasicHashTable *ht = (BasicHashTable *)malloc(sizeof(BasicHashTable));
-//   ht->capacity = capacity;
-//   ht->storage = (Pair **)calloc(capacity, sizeof(Pair *));
-
-//   return ht;
-// }
 
 /****
   Fill this in.
@@ -127,32 +114,6 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
     ht->storage[hashed_index]->value = value;
   }
 }
-// void hash_table_insert(BasicHashTable *ht, char *key, char *value)
-// {
-//   // Note, since we are only writing a resize function in hashtables.c
-//   //    I'm NOT going to conditionally check if the ht is full and if so resize it.
-
-//   // hash the key to get an array index
-//   unsigned int index = hash(key, ht->capacity);
-
-//   // check if the bucket at that index is occupied
-//   Pair *curr_pair = ht->storage[index];
-
-//   // If you do, overwrite that value
-//   if (curr_pair != NULL)
-//   {
-//     printf("key indexed into an occupied slot, key and value will be overwritten...\n");
-//     curr_pair->key = key;
-//     curr_pair->value = value;
-//   }
-//   // If not, create a new pair and add it to the LinkedList
-//   else
-//   {
-//     // if it's not occupied, add a new Pair to the bucket
-//     Pair *new_pair = create_pair(key, value);
-//     ht->storage[index] = new_pair;
-//   }
-// }
 
 /****
   Fill this in.
@@ -176,19 +137,6 @@ void hash_table_remove(BasicHashTable *ht, char *key)
   printf("Yo, the key you gave me doesn't exist. Check yourself before you rekt yourself. \n");
   // exit(1); explictely, i want to know what to return in a void function, and can i just use exit(1)
 }
-
-// void hash_table_remove(BasicHashTable *ht, char *key)
-// {
-//   // hash the key to get an array index
-//   unsigned int index = hash(key, ht->capacity);
-
-//   // if key_found, destroy pair(free's the address and pointer), and set element of array to null
-//   if (ht->storage[index] != NULL)
-//   {
-//     destroy_pair(ht->storage[index]);
-//     ht->storage[index] = NULL;
-//   }
-// }
 
 char *hash_table_retrieve(BasicHashTable *ht, char *key)
 {
