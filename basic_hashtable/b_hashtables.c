@@ -40,9 +40,10 @@ void destroy_pair(Pair *pair)
 {
   if (pair != NULL)
   {
-    free(pair->key);
-    free(pair->value);
+    //free(pair->key);
+    //free(pair->value);
     free(pair);
+    //pair = NULL;
   }
 }
 
@@ -81,6 +82,19 @@ BasicHashTable *create_hash_table(int capacity)
 
   return ht;
 }
+// BasicHashTable *create_hash_table(int capacity)
+// {
+//   if (capacity < 1)
+//   {
+//     return NULL;
+//   }
+
+//   BasicHashTable *ht = (BasicHashTable *)malloc(sizeof(BasicHashTable));
+//   ht->capacity = capacity;
+//   ht->storage = (Pair **)calloc(capacity, sizeof(Pair *));
+
+//   return ht;
+// }
 
 /****
   Fill this in.
@@ -91,15 +105,54 @@ BasicHashTable *create_hash_table(int capacity)
  ****/
 void hash_table_insert(BasicHashTable *ht, char *key, char *value)
 {
-  // so i first need to hash the key
-  // i guess I need some max, so is that the ... capacity?
-  unsigned int hashed_index = hash(*key, ht->capacity);
-  // okay so i have the hashed index, i need to put my key and value into that index
-  // struct is Pair, i allocate a pointer to point to a chunk of data that is the size of pair
-  //Pair *pair = malloc(sizeof(Pair));
-  // nvm, we have a function called createpair() lol
-  Pair *pair = createpair(key, value);
+
+  // the reason we hash this pair is so we get an index value that is lower than the capacity
+  unsigned int hashed_index = hash(key, ht->capacity);
+  if (ht->storage[hashed_index] == NULL)
+  {
+    // if the bucket is empty, let's intialize a pair and put it into it
+    Pair *pair = create_pair(key, value);
+    ht->storage[hashed_index] = pair;
+  }
+  else if (strcmp(ht->storage[hashed_index]->key, key) == 0)
+  {
+    // if the key matches the hashed key, update the value of said key
+
+    ht->storage[hashed_index]->value = value;
+  }
+  else if (strcmp(ht->storage[hashed_index]->key, key) != 0)
+  {
+    // this is a collision, we somehow ended up with two different keys with the same hash
+    printf("This bucket is already filled, we will overwrite the previous key and value \n");
+    ht->storage[hashed_index]->value = value;
+  }
 }
+// void hash_table_insert(BasicHashTable *ht, char *key, char *value)
+// {
+//   // Note, since we are only writing a resize function in hashtables.c
+//   //    I'm NOT going to conditionally check if the ht is full and if so resize it.
+
+//   // hash the key to get an array index
+//   unsigned int index = hash(key, ht->capacity);
+
+//   // check if the bucket at that index is occupied
+//   Pair *curr_pair = ht->storage[index];
+
+//   // If you do, overwrite that value
+//   if (curr_pair != NULL)
+//   {
+//     printf("key indexed into an occupied slot, key and value will be overwritten...\n");
+//     curr_pair->key = key;
+//     curr_pair->value = value;
+//   }
+//   // If not, create a new pair and add it to the LinkedList
+//   else
+//   {
+//     // if it's not occupied, add a new Pair to the bucket
+//     Pair *new_pair = create_pair(key, value);
+//     ht->storage[index] = new_pair;
+//   }
+// }
 
 /****
   Fill this in.
@@ -108,25 +161,63 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
  ****/
 void hash_table_remove(BasicHashTable *ht, char *key)
 {
+  // ohh, we are just removing the pair
+  unsigned int hashed_index = hash(key, ht->capacity);
+  // wait, we are trying to nuke whatever is in the bucket, that pair in that bucket. so we better
+  // really make sure that the keys match, or we will kill a pair that doesn't need to die
+  if (ht->storage[hashed_index] != NULL && strcmp(ht->storage[hashed_index]->key, key) == 0)
+  {
+
+    destroy_pair(ht->storage[hashed_index]);
+    ht->storage[hashed_index] = NULL;
+    return;
+  }
+
+  printf("Yo, the key you gave me doesn't exist. Check yourself before you rekt yourself. \n");
+  // exit(1); explictely, i want to know what to return in a void function, and can i just use exit(1)
 }
 
-/****
-  Fill this in.
+// void hash_table_remove(BasicHashTable *ht, char *key)
+// {
+//   // hash the key to get an array index
+//   unsigned int index = hash(key, ht->capacity);
 
-  Should return NULL if the key is not found.
- ****/
+//   // if key_found, destroy pair(free's the address and pointer), and set element of array to null
+//   if (ht->storage[index] != NULL)
+//   {
+//     destroy_pair(ht->storage[index]);
+//     ht->storage[index] = NULL;
+//   }
+// }
+
 char *hash_table_retrieve(BasicHashTable *ht, char *key)
 {
+  unsigned int hashed_index = hash(key, ht->capacity);
+
+  if (ht->storage[hashed_index] != NULL && strcmp(ht->storage[hashed_index]->key, key) == 0)
+  {
+    // OMG DOT NOTATION IS A THING
+    return (*ht->storage[hashed_index]).value;
+  }
+
+  printf("Yo, the key you gave me doesn't exist. Check yourself before you rekt yourself. \n");
+
   return NULL;
 }
 
-/****
-  Fill this in.
-
-  Don't forget to free any malloc'ed memory!
- ****/
 void destroy_hash_table(BasicHashTable *ht)
 {
+  for (int i = 0; i < ht->capacity; i++)
+  {
+    if (ht->storage[i] != NULL)
+    {
+      hash_table_remove(ht, ht->storage[i]->key);
+    }
+  }
+  free(ht->storage);
+  free(ht);
+  ht->storage = NULL;
+  ht = NULL;
 }
 
 #ifndef TESTING
