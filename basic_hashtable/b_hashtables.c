@@ -164,8 +164,8 @@ void destroy_hash_table(BasicHashTable *ht)
   }
   free(ht->storage);
   free(ht);
-  ht->storage = NULL;
-  ht = NULL;
+  //ht->storage = NULL;
+  //ht = NULL;
 }
 
 #ifndef TESTING

@@ -9,7 +9,8 @@
   More specifically, the `next` field is a pointer pointing to the the 
   next `LinkedPair` in the list of `LinkedPair` nodes. 
  */
-typedef struct LinkedPair {
+typedef struct LinkedPair
+{
   char *key;
   char *value;
   struct LinkedPair *next;
@@ -18,7 +19,8 @@ typedef struct LinkedPair {
 /*
   Hash table with linked pairs.
  */
-typedef struct HashTable {
+typedef struct HashTable
+{
   int capacity;
   LinkedPair **storage;
 } HashTable;
@@ -41,7 +43,8 @@ LinkedPair *create_pair(char *key, char *value)
  */
 void destroy_pair(LinkedPair *pair)
 {
-  if (pair != NULL) {
+  if (pair != NULL)
+  {
     free(pair->key);
     free(pair->value);
     free(pair);
@@ -57,9 +60,10 @@ unsigned int hash(char *str, int max)
 {
   unsigned long hash = 5381;
   int c;
-  unsigned char * u_str = (unsigned char *)str;
+  unsigned char *u_str = (unsigned char *)str;
 
-  while ((c = *u_str++)) {
+  while ((c = *u_str++))
+  {
     hash = ((hash << 5) + hash) + c;
   }
 
@@ -73,8 +77,9 @@ unsigned int hash(char *str, int max)
  */
 HashTable *create_hash_table(int capacity)
 {
-  HashTable *ht;
-
+  HashTable *ht = malloc(sizeof(HashTable));
+  ht->capacity = capacity;
+  ht->storage = calloc(ht->capacity, sizeof(LinkedPair *));
   return ht;
 }
 
@@ -89,7 +94,46 @@ HashTable *create_hash_table(int capacity)
  */
 void hash_table_insert(HashTable *ht, char *key, char *value)
 {
+  //1) Take key, hash this number to get a num less than capacity.
+  unsigned int hashed_index = hash(key, ht->capacity);
+  //2) Take this num, use this as the index number/bucket number that we will store the pair.
+  if (ht->storage[hashed_index] == NULL)
+  {
+    // 2.a) If there's nothing in this bucket, put the Pair into the bucket.
+    LinkedPair *pair = create_pair(key, value);
+    ht->storage[hashed_index] = pair;
+    return;
+  }
+  else
+  {
+    // 2.b) If there is something in there, I need to iterate through all the nodes in the bucket.
+    // 2.c) Okay, so I need to make copies of the pairs inside the bucket.
+    LinkedPair *first_node = ht->storage[hashed_index]; // the index number always points to the first node
+    LinkedPair *next_node = (*first_node).next;
+    // linked lists are not arrays -> you have to traverse all the pointers
+    //while ( the next node does not point to a NULL AND currentnode.key is not the key we are looking for )
+    // keep going through the while loop until we hit the key
+    while (next_node != NULL && strcmp((*first_node).key, key) != 0)
+    {
 
+      first_node = next_node;
+      next_node = (*first_node).next;
+    }
+    // if the key is found, then we do what we always do: let's update the value!
+    // learn more about direct accessing of addresses
+    if (strcmp((*first_node).key, key) == 0)
+    {
+
+      (*first_node).value = value;
+    }
+    // else, if the key is not found, i need to create that key value pair and append to the end of the first_node!
+    else
+    {
+      LinkedPair *new_pair = create_pair(key, value);
+      (*first_node).next = new_pair;
+    }
+    }
+  // I need to traverse ... ? the bucket? and make sure all keys don't match the new pair key.
 }
 
 /*
@@ -102,7 +146,6 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
  */
 void hash_table_remove(HashTable *ht, char *key)
 {
-
 }
 
 /*
@@ -125,7 +168,6 @@ char *hash_table_retrieve(HashTable *ht, char *key)
  */
 void destroy_hash_table(HashTable *ht)
 {
-
 }
 
 /*
@@ -142,7 +184,6 @@ HashTable *hash_table_resize(HashTable *ht)
 
   return new_ht;
 }
-
 
 #ifndef TESTING
 int main(void)
