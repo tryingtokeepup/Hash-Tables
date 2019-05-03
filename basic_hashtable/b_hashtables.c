@@ -2,19 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 /****
   Basic hash table key/value pair
  ****/
-typedef struct Pair {
-  char *key;
+typedef struct Pair
+{
+  char *key; // i guess both of these are a complex data type, like a string
   char *value;
 } Pair;
 
 /****
   Basic hash table
  ****/
-typedef struct BasicHashTable {
+typedef struct BasicHashTable
+{
+  // capacity is the number of pairs we can have, or the number of key:value pairs we can... store?
   int capacity;
   Pair **storage;
 } BasicHashTable;
@@ -36,10 +38,12 @@ Pair *create_pair(char *key, char *value)
  ****/
 void destroy_pair(Pair *pair)
 {
-  if (pair != NULL) {
-    free(pair->key);
-    free(pair->value);
+  if (pair != NULL)
+  {
+    //free(pair->key);
+    //free(pair->value);
     free(pair);
+    //pair = NULL;
   }
 }
 
@@ -52,15 +56,15 @@ unsigned int hash(char *str, int max)
 {
   unsigned long hash = 5381;
   int c;
-  unsigned char * u_str = (unsigned char *)str;
+  unsigned char *u_str = (unsigned char *)str;
 
-  while ((c = *u_str++)) {
+  while ((c = *u_str++))
+  {
     hash = ((hash << 5) + hash) + c;
   }
 
   return hash % max;
 }
-
 
 /****
   Fill this in.
@@ -70,7 +74,11 @@ unsigned int hash(char *str, int max)
  ****/
 BasicHashTable *create_hash_table(int capacity)
 {
-  BasicHashTable *ht;
+  BasicHashTable *ht = malloc(sizeof(BasicHashTable)); //do we multiply by capacity?
+  // so, i need to use Calloc here to intialize everything to NULL
+  //void* calloc (size_t num, size_t size);
+  ht->capacity = capacity;
+  ht->storage = calloc(ht->capacity, sizeof(Pair *));
 
   return ht;
 }
@@ -85,6 +93,26 @@ BasicHashTable *create_hash_table(int capacity)
 void hash_table_insert(BasicHashTable *ht, char *key, char *value)
 {
 
+  // the reason we hash this pair is so we get an index value that is lower than the capacity
+  unsigned int hashed_index = hash(key, ht->capacity);
+  if (ht->storage[hashed_index] == NULL)
+  {
+    // if the bucket is empty, let's intialize a pair and put it into it
+    Pair *pair = create_pair(key, value);
+    ht->storage[hashed_index] = pair;
+  }
+  else if (strcmp(ht->storage[hashed_index]->key, key) == 0)
+  {
+    // if the key matches the hashed key, update the value of said key
+
+    ht->storage[hashed_index]->value = value;
+  }
+  else if (strcmp(ht->storage[hashed_index]->key, key) != 0)
+  {
+    // this is a collision, we somehow ended up with two different keys with the same hash
+    printf("This bucket is already filled, we will overwrite the previous key and value \n");
+    ht->storage[hashed_index]->value = value;
+  }
 }
 
 /****
@@ -94,29 +122,51 @@ void hash_table_insert(BasicHashTable *ht, char *key, char *value)
  ****/
 void hash_table_remove(BasicHashTable *ht, char *key)
 {
+  // ohh, we are just removing the pair
+  unsigned int hashed_index = hash(key, ht->capacity);
+  // wait, we are trying to nuke whatever is in the bucket, that pair in that bucket. so we better
+  // really make sure that the keys match, or we will kill a pair that doesn't need to die
+  if (ht->storage[hashed_index] != NULL && strcmp(ht->storage[hashed_index]->key, key) == 0)
+  {
 
+    destroy_pair(ht->storage[hashed_index]);
+    ht->storage[hashed_index] = NULL;
+    return;
+  }
+
+  printf("Yo, the key you gave me doesn't exist. Check yourself before you rekt yourself. \n");
+  // exit(1); explictely, i want to know what to return in a void function, and can i just use exit(1)
 }
 
-/****
-  Fill this in.
-
-  Should return NULL if the key is not found.
- ****/
 char *hash_table_retrieve(BasicHashTable *ht, char *key)
 {
+  unsigned int hashed_index = hash(key, ht->capacity);
+
+  if (ht->storage[hashed_index] != NULL && strcmp(ht->storage[hashed_index]->key, key) == 0)
+  {
+    // OMG DOT NOTATION IS A THING
+    return (*ht->storage[hashed_index]).value;
+  }
+
+  printf("Yo, the key you gave me doesn't exist. Check yourself before you rekt yourself. \n");
+
   return NULL;
 }
 
-/****
-  Fill this in.
-
-  Don't forget to free any malloc'ed memory!
- ****/
 void destroy_hash_table(BasicHashTable *ht)
 {
-
+  for (int i = 0; i < ht->capacity; i++)
+  {
+    if (ht->storage[i] != NULL)
+    {
+      hash_table_remove(ht, ht->storage[i]->key);
+    }
+  }
+  free(ht->storage);
+  free(ht);
+  //ht->storage = NULL;
+  //ht = NULL;
 }
-
 
 #ifndef TESTING
 int main(void)
@@ -129,9 +179,12 @@ int main(void)
 
   hash_table_remove(ht, "line");
 
-  if (hash_table_retrieve(ht, "line") == NULL) {
+  if (hash_table_retrieve(ht, "line") == NULL)
+  {
     printf("...gone tomorrow. (success)\n");
-  } else {
+  }
+  else
+  {
     fprintf(stderr, "ERROR: STILL HERE\n");
   }
 
