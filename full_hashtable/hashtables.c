@@ -33,7 +33,7 @@ LinkedPair *create_pair(char *key, char *value)
   LinkedPair *pair = malloc(sizeof(LinkedPair));
   pair->key = strdup(key);
   pair->value = strdup(value);
-  pair->next = NULL;
+  (*pair).next = NULL;
 
   return pair;
 }
@@ -132,7 +132,7 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
       LinkedPair *new_pair = create_pair(key, value);
       (*first_node).next = new_pair;
     }
-    }
+  }
   // I need to traverse ... ? the bucket? and make sure all keys don't match the new pair key.
 }
 
@@ -146,6 +146,22 @@ void hash_table_insert(HashTable *ht, char *key, char *value)
  */
 void hash_table_remove(HashTable *ht, char *key)
 {
+  // 1) We need to remove the key value pair at the hashed_index, so first we need to get the hash
+  unsigned int hashed_index = hash(key, ht->capacity);
+  // 2) now, once we have the index, go through the linked listand find the node with the same key. once we do, remove it.
+  LinkedPair *head_node = ht->storage[hashed_index]; // the index number always points to the first node
+  LinkedPair *next_node = (*head_node).next;
+  while (next_node != NULL && strcmp((*head_node).key, key) != 0)
+  {
+
+    head_node = next_node;
+    next_node = (*head_node).next;
+  }
+  if (strcmp(head_node->key, key) == 0)
+  {
+    destroy_pair(head_node);
+    head_node = NULL;
+  }
 }
 
 /*
@@ -158,7 +174,27 @@ void hash_table_remove(HashTable *ht, char *key)
  */
 char *hash_table_retrieve(HashTable *ht, char *key)
 {
-  return NULL;
+  // take the key, hash it, then take that array, traverse the linked_list for that key
+  unsigned int hashed_index = hash(key, ht->capacity);
+  LinkedPair *head_node = ht->storage[hashed_index]; // the index number always points to the first node
+  LinkedPair *next_node = (*head_node).next;
+
+  while (next_node != NULL && strcmp((*head_node).key, key) != 0) // if we find the key OR the next_node is NULL, we exit
+  {
+
+    head_node = next_node;
+    next_node = (*head_node).next;
+  }
+  // should have head
+  if (strcmp(head_node->key, key) == 0)
+  {
+    return head_node;
+  }
+  else
+  {
+
+    return NULL;
+  }
 }
 
 /*
